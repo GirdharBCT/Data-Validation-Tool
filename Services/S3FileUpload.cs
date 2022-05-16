@@ -49,12 +49,15 @@ namespace Data_Validation_Tool.Services
 
             //Making entry in dataanalysis_validationrequest table
             var dVRequest = _mapper.Map<DataanalysisValidationrequest>(parms.dVDtoRequest);
-            //await _context.DataanalysisValidationrequests.AddAsync(dVRequest);
-            ////_context.SaveChanges();
-            //var validationRequest = _context.DataanalysisValidationrequests.Last();
-            _context.DataanalysisValidationrequests.Add(dVRequest);
-            _context.SaveChanges();
-            var validationRequest = dVRequest;
+            dVRequest.RequestedBy = 1;
+            dVRequest.ValidationStatusId = 1;
+            dVRequest.RequestedDate = DateTime.Now;
+            await _context.DataanalysisValidationrequests.AddAsync(dVRequest);
+            await _context.SaveChangesAsync();
+            var validationRequest = await _context.DataanalysisValidationrequests.OrderByDescending(x=>x.Id).FirstAsync();
+            //_context.DataanalysisValidationrequests.Add(dVRequest);
+            //_context.SaveChanges();
+            //var validationRequest = dVRequest;
 
             //----
 
@@ -63,7 +66,7 @@ namespace Data_Validation_Tool.Services
                 BucketName = bucketName,
                 Key = parms.formFile.FileName
             };
-            
+
             initiateRequest.Metadata.Add("validationRequestId", validationRequest.Id.ToString()); //Adding Validation request id in metadata
 
             InitiateMultipartUploadResponse initResponse =
@@ -118,7 +121,7 @@ namespace Data_Validation_Tool.Services
 
                 //Writing file location in dataanalysis_validationrequest table
                 int dVRequestId = validationRequest.Id;
-                DataanalysisValidationrequest dVRequestObj = await _context.DataanalysisValidationrequests.LastAsync(i => i.Id == dVRequestId);
+                DataanalysisValidationrequest dVRequestObj = await _context.DataanalysisValidationrequests.OrderByDescending(x=>x.Id).FirstOrDefaultAsync(i => i.Id == dVRequestId);
                 dVRequestObj.Url = completeUploadResponse.Location;
                 dVRequestObj.Size = parms.formFile.Length;
                 await _context.SaveChangesAsync();
