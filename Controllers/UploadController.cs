@@ -21,7 +21,7 @@ namespace Data_Validation_Tool.Controllers
             _service = service;
         }
         [HttpPut]
-        [AllowAnonymous]
+        //[AllowAnonymous]
         [RequestSizeLimit(10000000000)]
         [Route("Upload")]
         public async Task<IActionResult> AddFile([FromForm]Parms parms)

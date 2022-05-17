@@ -1,10 +1,12 @@
 using Amazon.S3;
 using Data_Validation_Tool.Data;
 using Data_Validation_Tool.Interface;
+using Data_Validation_Tool.Middleware;
 using Data_Validation_Tool.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
@@ -50,6 +52,7 @@ namespace Data_Validation_Tool
             //Services
             services.AddScoped<IS3FileUpload, S3FileUpload>();
             services.AddScoped<IAuth, Auth>();
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 
             //Multipart Limit
             services.Configure<FormOptions>(x =>
@@ -119,6 +122,8 @@ namespace Data_Validation_Tool
             app.UseAuthentication();
 
             app.UseAuthorization();
+
+            app.UseMiddleware<JwtMiddleware>();
 
             app.UseSwagger();
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Phynd.DataValidation.Api v1"));

@@ -25,14 +25,14 @@ namespace Data_Validation_Tool.Services
         private static IAmazonS3 _s3Client;
         private readonly prd_phyndContext _context;
         private readonly IMapper _mapper;
-        //private IConfiguration _configuration;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private const string bucketName = "demo-dvt-glue-bucket/input";
-        public S3FileUpload(IAmazonS3 s3Client,prd_phyndContext context,IMapper mapper)
+        public S3FileUpload(IAmazonS3 s3Client,prd_phyndContext context,IMapper mapper, IHttpContextAccessor httpContextAccessor)
         {
             _s3Client = s3Client;
             _context = context;
             _mapper = mapper;
-            //_configuration = configuration;
+            _httpContextAccessor = httpContextAccessor;
         }
         public async Task<S3ApiResponse> AddFileAsync(Parms parms)
         {
@@ -49,17 +49,13 @@ namespace Data_Validation_Tool.Services
 
             //Making entry in dataanalysis_validationrequest table
             var dVRequest = _mapper.Map<DataanalysisValidationrequest>(parms.dVDtoRequest);
-            dVRequest.RequestedBy = 1;
             dVRequest.ValidationStatusId = 1;
             dVRequest.RequestedDate = DateTime.Now;
+            dVRequest.RequestedBy = int.Parse(_httpContextAccessor.HttpContext.Items["LogedInUserId"].ToString()); //getting logedin user id from http context
             await _context.DataanalysisValidationrequests.AddAsync(dVRequest);
             await _context.SaveChangesAsync();
             var validationRequest = await _context.DataanalysisValidationrequests.OrderByDescending(x=>x.Id).FirstAsync();
-            //_context.DataanalysisValidationrequests.Add(dVRequest);
-            //_context.SaveChanges();
-            //var validationRequest = dVRequest;
-
-            //----
+            //---------------------------------------
 
             InitiateMultipartUploadRequest initiateRequest = new InitiateMultipartUploadRequest
             {
